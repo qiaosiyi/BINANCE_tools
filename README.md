@@ -45,3 +45,12 @@ python3 cancel_open_order.py
 ```
 
 他会提示输入交易对，然后取消该交易对的所有订单。
+
+## 其他
+
+掌握了挂单方式，binance API就妙不可言了，你可以搭建自己的交易机器人，创造被动收入。
+## Documentation
+
+[https://binance-connector.readthedocs.io](https://binance-connector.readthedocs.io)
+
+[https://github.com/binance/binance-connector-python/blob/master/README.md](https://github.com/binance/binance-connector-python/blob/master/README.md)
