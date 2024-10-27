@@ -34,6 +34,10 @@ python3 new_order.py
 
 ![示例图片](pic/example.png)
 
+此时查看binance账户，可以看到已经挂了20个卖单:
+
+![账户](pic/ok.png)
+
 
 ## 取消某交易对的所有订单
 ```bash
