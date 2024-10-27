@@ -22,7 +22,7 @@ pip install binance-connector
 
 最好在墙外做，暂时不确定这些是否会被墙内封锁.
 
-## 使用
+## 挂网格买/卖单
 ```bash
 python3 new_order.py
 ```
@@ -31,7 +31,7 @@ python3 new_order.py
 
 基本策略是网格下单，根据您输入的参数，会自动计算出价格和数量和订单数，然后自动挂单。
 
-## 取消订单
+## 取消某交易对的所有订单
 ```bash
 python3 cancel_open_order.py
 ```
