@@ -82,21 +82,21 @@ def run_orders(orders):
 
 
 def create_orders(symbol, side, base_price, price_range, num_orders, quantity):
+    print("price_range_a: ", price_range)
 
     orders = []
     if isinstance(price_range, str) and '%' in price_range:
         price_range_str = price_range.strip('%')
         if price_range_str.startswith('-'):
-            price_range = -float(price_range_str[1:]) / 100 * base_price
+            price_range = -float(price_range_str[1:])  * base_price
         else:
-            price_range = float(price_range_str) / 100 * base_price
+            price_range = float(price_range_str)  * base_price
     elif isinstance(price_range, (int, float)):
-        price_range = price_range
-
+        price_range = price_range * base_price
 
     price_step = (price_range ) / (num_orders)
     quantity_step = quantity / num_orders
-    
+
     for i in range(num_orders):
         if price_step > 0:
             price = gen_price(symbol,base_price + (i + 1) * price_step)
@@ -121,7 +121,8 @@ if '%' in price_range:
     price_range = price_range.strip('%')
     if price_range.startswith('-'):
         price_range = - float(price_range.lstrip('-')) / 100 
-    price_range = float(price_range) / 100
+    else:
+        price_range = float(price_range) / 100
 else:
     price_range = float(price_range)
 side = input("Enter the trading side (B for BUY, S for SELL): ")
