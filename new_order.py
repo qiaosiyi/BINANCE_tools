@@ -17,6 +17,8 @@ def gen_target_quantity_step(symbol,quantity):
         return f"{quantity:.3f}"
     elif 'DOGE' in symbol:
         return f"{int(quantity)}"
+    elif 'FDUSD' in symbol:
+        return f"{int(quantity)}"
 
 def gen_price(symbol,price):
     if 'BTC' in symbol:
@@ -29,6 +31,8 @@ def gen_price(symbol,price):
         return f"{price:.1f}"
     elif 'DOGE' in symbol:
         return f"{price:.5f}"
+    elif 'FDUSD' in symbol:
+        return f"{price:.4f}"
 
 
 def buy_order(client, symbol, quantity, price):
@@ -82,7 +86,6 @@ def run_orders(orders):
 
 
 def create_orders(symbol, side, base_price, price_range, num_orders, quantity):
-    print("price_range_a: ", price_range)
 
     orders = []
     if isinstance(price_range, str) and '%' in price_range:
@@ -124,7 +127,10 @@ if '%' in price_range:
     else:
         price_range = float(price_range) / 100
 else:
-    price_range = float(price_range)
+    if price_range.startswith('-'):
+        price_range = - float(price_range.lstrip('-'))
+    else:
+        price_range = float(price_range)
 side = input("Enter the trading side (B for BUY, S for SELL): ")
 if side.upper() == 'B':
     side = 'BUY'
