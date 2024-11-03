@@ -3,6 +3,23 @@ import json
 import logging
 from binance.spot import Spot
 from binance.lib.utils import config_logging
+from binance.websocket.spot.websocket_api import SpotWebsocketAPIClient
+import subprocess
+import sys
+
+def get_current_price(symbol):
+    try:
+        # 调用 price.py 脚本并获取输出
+        result = subprocess.run(['python3', 'price.py', symbol], 
+                              capture_output=True, 
+                              text=True,
+                              check=True)
+        # 返回输出结果(当前价格)
+        return float(result.stdout.strip())
+    except subprocess.CalledProcessError as e:
+        print(f"获取价格时发生错误: {e}")
+        sys.exit(1)
+
 
 config_logging(logging, logging.ERROR)
 
@@ -17,8 +34,6 @@ def gen_target_quantity_step(symbol,quantity):
         return f"{quantity:.3f}"
     elif 'DOGE' in symbol:
         return f"{int(quantity)}"
-    elif 'FDUSD' in symbol:
-        return f"{int(quantity)}"
 
 def gen_price(symbol,price):
     if 'BTC' in symbol:
@@ -31,8 +46,6 @@ def gen_price(symbol,price):
         return f"{price:.1f}"
     elif 'DOGE' in symbol:
         return f"{price:.5f}"
-    elif 'FDUSD' in symbol:
-        return f"{price:.4f}"
 
 
 def buy_order(client, symbol, quantity, price):
@@ -86,20 +99,27 @@ def run_orders(orders):
 
 
 def create_orders(symbol, side, base_price, price_range, num_orders, quantity):
+    print("price_range_a: ", price_range)
 
     orders = []
     if isinstance(price_range, str) and '%' in price_range:
+        print("price_range is a percentage")
         price_range_str = price_range.strip('%')
         if price_range_str.startswith('-'):
             price_range = -float(price_range_str[1:])  * base_price
         else:
             price_range = float(price_range_str)  * base_price
     elif isinstance(price_range, (int, float)):
+        print("price_range is a number")
         price_range = price_range * base_price
+
 
     price_step = (price_range ) / (num_orders)
     quantity_step = quantity / num_orders
-
+    print("base_price: ", base_price)
+    print("price_range_b: ", price_range)
+    print("price_step: ", price_step)
+    print("quantity_step: ", quantity_step)
     for i in range(num_orders):
         if price_step > 0:
             price = gen_price(symbol,base_price + (i + 1) * price_step)
@@ -118,7 +138,9 @@ def create_orders(symbol, side, base_price, price_range, num_orders, quantity):
 
 
 symbol = input("Enter the trading pair symbol (e.g., BTCUSDT): ").upper()
-base_price = float(input("Enter the base price: "))
+base_price = get_current_price(symbol)
+print(symbol, "current price: ", base_price)
+# base_price = float(input("Enter the base price: "))
 price_range = input("Enter the price range (can be a number or percentage, e.g., 10 or 10%): ")
 if '%' in price_range:
     price_range = price_range.strip('%')
@@ -127,10 +149,7 @@ if '%' in price_range:
     else:
         price_range = float(price_range) / 100
 else:
-    if price_range.startswith('-'):
-        price_range = - float(price_range.lstrip('-'))
-    else:
-        price_range = float(price_range)
+    price_range = float(price_range)
 side = input("Enter the trading side (B for BUY, S for SELL): ")
 if side.upper() == 'B':
     side = 'BUY'
