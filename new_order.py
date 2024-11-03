@@ -99,27 +99,24 @@ def run_orders(orders):
 
 
 def create_orders(symbol, side, base_price, price_range, num_orders, quantity):
-    print("price_range_a: ", price_range)
+
 
     orders = []
     if isinstance(price_range, str) and '%' in price_range:
-        print("price_range is a percentage")
+
         price_range_str = price_range.strip('%')
         if price_range_str.startswith('-'):
             price_range = -float(price_range_str[1:])  * base_price
         else:
             price_range = float(price_range_str)  * base_price
     elif isinstance(price_range, (int, float)):
-        print("price_range is a number")
+
         price_range = price_range * base_price
 
 
     price_step = (price_range ) / (num_orders)
     quantity_step = quantity / num_orders
-    print("base_price: ", base_price)
-    print("price_range_b: ", price_range)
-    print("price_step: ", price_step)
-    print("quantity_step: ", quantity_step)
+
     for i in range(num_orders):
         if price_step > 0:
             price = gen_price(symbol,base_price + (i + 1) * price_step)
@@ -138,9 +135,15 @@ def create_orders(symbol, side, base_price, price_range, num_orders, quantity):
 
 
 symbol = input("Enter the trading pair symbol (e.g., BTCUSDT): ").upper()
-base_price = get_current_price(symbol)
-print(symbol, "current price: ", base_price)
-# base_price = float(input("Enter the base price: "))
+price_choice = input("Do you want to use current market price as base price? (Y/N): ").upper()
+if price_choice == 'N':
+    base_price = float(input("Please enter your base price: "))
+    print(symbol, "base_price: ", base_price)
+elif price_choice == 'Y':
+    base_price = get_current_price(symbol)
+    print(symbol, "base price: ", base_price,"(current price)")
+
+
 price_range = input("Enter the price range (can be a number or percentage, e.g., 10 or 10%): ")
 if '%' in price_range:
     price_range = price_range.strip('%')
@@ -161,7 +164,12 @@ num_orders = int(input("Enter the number of orders: "))
 quantity = float(input("Enter the total trading quantity in USD: "))
 gen_orders = create_orders(symbol, side, base_price, price_range, num_orders, quantity)
 
-print(gen_orders)
+print("\nOrder Details:")
+print(f"{'No.':<6}{'Symbol':<12}{'Side':<6}{'Price':<12}{'Quantity':<12}{'USD':<10}")
+print("-" * 60)
+for i, order in enumerate(gen_orders, 1):
+    print(f"{i:<6}{order['symbol']:<12}{order['side']:<6}{order['price']:<12}{order['quantity']:<12}{order['USD']:<10}")
+print("-" * 60)
 
 # Ask user whether to execute orders
 user_input = input("Execute orders? (Y/N): ")
