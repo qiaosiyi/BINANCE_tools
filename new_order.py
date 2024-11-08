@@ -97,6 +97,19 @@ def run_orders(orders):
             logging.info(f"SELL {order['symbol']} {order['quantity']} {order['price']}")
             sell_order(client, order['symbol'], order['quantity'], order['price'])
 
+def get_balance():
+    client = Spot()
+    logging.info(client.time())
+    
+    with open('config.json', 'r') as f:
+        config = json.load(f)
+    api_key = config['api_key']
+    api_secret = config['api_secret']
+    client = Spot(api_key=api_key, api_secret=api_secret)
+    account_info = client.account()
+
+    return account_info
+
 
 def create_orders(symbol, side, base_price, price_range, num_orders, quantity):
 
@@ -134,7 +147,57 @@ def create_orders(symbol, side, base_price, price_range, num_orders, quantity):
     return orders
 
 
-symbol = input("Enter the trading pair symbol (e.g., BTCUSDT): ").upper()
+target_coin = input("Enter the trading target coin (e.g., BTC): ").upper()
+target_coins = ['ADA', 'BNB', 'ETH', 'BTC', 'DOGE']
+while True:
+    if target_coin not in target_coins:
+        print(f"错误: 请选择有效的交易币种 ({'/'.join(target_coins)})")
+        target_coin = input("请重新输入交易币种 (e.g., BTC): ").upper()
+    else:
+        break
+
+
+stable_coins = ['USDT', 'USDC', 'FDUSD']
+# 遍历所有稳定币,查询每个交易对的价格
+print("\n当前价格:")
+
+print("-" * 25)
+print(f"{'交易对':<15}{'价格':<10}")
+print("-" * 25)
+for stable_coin in stable_coins:
+    symbol = target_coin + stable_coin
+    try:
+        price = get_current_price(symbol)
+        print(f"{symbol:<15}{price:<10.2f}")
+    except:
+        print(f"{symbol:<15}{'无法获取':<10}")
+print("-" * 25)
+balance = get_balance()['balances']
+print("\nYour Account Balance:")
+print("-" * 40)
+print(f"{'Asset':<10}{'Free':<15}{'Locked':<15}")
+print("-" * 40)
+for asset in balance:
+    if (float(asset['free']) > 0 or float(asset['locked']) > 0) and asset['asset'] in ['USDT', 'USDC', 'FDUSD']:
+        print(f"{asset['asset']:<10}{float(asset['free']):<15.3f}{float(asset['locked']):<15.3f}")
+print("-" * 40)
+for asset in balance:
+    if (float(asset['free']) > 0 or float(asset['locked']) > 0) and asset['asset'] in [target_coin]:
+        print(f"{asset['asset']:<10}{float(asset['free']):<15.3f}{float(asset['locked']):<15.3f}")
+print("-" * 40)
+
+# 让用户选择稳定币
+while True:
+    stable_coin = input(f"请选择稳定币 ({'/'.join(stable_coins)}): ").upper()
+    if stable_coin in stable_coins:
+        break
+    print("错误: 请选择有效的稳定币")
+
+
+
+symbol=target_coin+stable_coin
+
+
 price_choice = input("Do you want to use current market price as base price? (Y/N): ").upper()
 if price_choice == 'N':
     base_price = float(input("Please enter your base price: "))
@@ -161,7 +224,10 @@ elif side.upper() == 'S':
 else:
     raise ValueError("Invalid trading side, please enter B or S")
 num_orders = int(input("Enter the number of orders: "))
-quantity = float(input("Enter the total trading quantity in USD: "))
+
+
+
+quantity = float(input("Enter the total trading quantity in "+stable_coin+": "))
 gen_orders = create_orders(symbol, side, base_price, price_range, num_orders, quantity)
 
 print("\nOrder Details:")
