@@ -34,6 +34,11 @@ def gen_target_quantity_step(symbol,quantity):
         return f"{quantity:.3f}"
     elif 'DOGE' in symbol:
         return f"{int(quantity)}"
+    elif 'SCR' in symbol:
+        return f"{quantity:.1f}"
+    else:
+        "No Symbol Type"
+
 
 def gen_price(symbol,price):
     if 'BTC' in symbol:
@@ -46,6 +51,10 @@ def gen_price(symbol,price):
         return f"{price:.1f}"
     elif 'DOGE' in symbol:
         return f"{price:.5f}"
+    elif 'SCR' in symbol:
+        return f"{price:.3f}"
+    else:
+        "No Symbol Type"
 
 
 def buy_order(client, symbol, quantity, price):
@@ -112,43 +121,50 @@ def get_balance():
 
 
 def create_orders(symbol, side, base_price, price_range, num_orders, quantity):
-
-
     orders = []
     if isinstance(price_range, str) and '%' in price_range:
-
         price_range_str = price_range.strip('%')
         if price_range_str.startswith('-'):
             price_range = -float(price_range_str[1:])  * base_price
         else:
             price_range = float(price_range_str)  * base_price
     elif isinstance(price_range, (int, float)):
-
         price_range = price_range * base_price
 
-
     price_step = (price_range ) / (num_orders)
+
     quantity_step = quantity / num_orders
+
 
     for i in range(num_orders):
         if price_step > 0:
             price = gen_price(symbol,base_price + (i + 1) * price_step)
             str_price = str(price)
-            target_quantity_step = gen_target_quantity_step(symbol, quantity_step/float(price))
-            str_quantity_step = f"{quantity_step:.1f}"
-            orders.append({"symbol": symbol, "side": side, "price": str_price, "quantity": target_quantity_step, "USD": str_quantity_step})
+            if side == "BUY":
+                target_quantity_step = gen_target_quantity_step(symbol, quantity_step/float(price))
+                str_quantity_step = f"{quantity_step:.1f}"
+                orders.append({"symbol": symbol, "side": side, "price": str_price, "quantity": target_quantity_step, "USD": str_quantity_step})
+            else:
+                target_quantity_step = gen_target_quantity_step(symbol, quantity_step)
+                str_quantity_step = f"{quantity_step*float(price):.1f}"
+                orders.append({"symbol": symbol, "side": side, "price": str_price, "quantity": target_quantity_step, "USD": str_quantity_step})
+            
         elif price_step < 0:
             price = gen_price(symbol,base_price + (i + 1) * price_step)
             str_price = str(price)
-            target_quantity_step = gen_target_quantity_step(symbol, quantity_step/float(price))
-            str_quantity_step = f"{quantity_step:.1f}"
-            orders.append({"symbol": symbol, "side": side, "price": str_price, "quantity": target_quantity_step, "USD": str_quantity_step})
+            if side == "BUY":
+                target_quantity_step = gen_target_quantity_step(symbol, quantity_step/float(price))
+                str_quantity_step = f"{quantity_step:.1f}"
+                orders.append({"symbol": symbol, "side": side, "price": str_price, "quantity": target_quantity_step, "USD": str_quantity_step})
+            else:
+                print("sorry no way! price range should be positive!")
+                exit()
     
     return orders
 
 
 target_coin = input("Enter the trading target coin (e.g., BTC): ").upper()
-target_coins = ['ADA', 'BNB', 'ETH', 'BTC', 'DOGE']
+target_coins = ['ADA', 'BNB', 'ETH', 'BTC', 'DOGE', 'SCR']
 while True:
     if target_coin not in target_coins:
         print(f"错误: 请选择有效的交易币种 ({'/'.join(target_coins)})")
@@ -168,7 +184,7 @@ for stable_coin in stable_coins:
     symbol = target_coin + stable_coin
     try:
         price = get_current_price(symbol)
-        print(f"{symbol:<15}{price:<10.2f}")
+        print(f"{symbol:<15}{price:<10.4f}")
     except:
         print(f"{symbol:<15}{'无法获取':<10}")
 print("-" * 25)
@@ -188,8 +204,17 @@ print("-" * 40)
 
 # 让用户选择稳定币
 while True:
-    stable_coin = input(f"请选择稳定币 ({'/'.join(stable_coins)}): ").upper()
-    if stable_coin in stable_coins:
+    stable_coin = input(f"\n请选择稳定币 ({'/'.join(stable_coins)}): ").upper()
+    if stable_coin in stable_coins or \
+       (stable_coin.upper() == 'T' and 'USDT' in stable_coins) or \
+       (stable_coin.upper() == 'F' and 'FDUSD' in stable_coins) or \
+       (stable_coin.upper() == 'C' and 'USDC' in stable_coins):
+        if stable_coin.upper() == 'T':
+            stable_coin = 'USDT'
+        elif stable_coin.upper() == 'F':
+            stable_coin = 'FDUSD'
+        elif stable_coin.upper() == 'C':
+            stable_coin = 'USDC'
         break
     print("错误: 请选择有效的稳定币")
 
@@ -198,13 +223,18 @@ while True:
 symbol=target_coin+stable_coin
 
 
-price_choice = input("Do you want to use current market price as base price? (Y/N): ").upper()
+price_choice = input("Do you want to use current market price as base price? (default Y / N): ").upper()
 if price_choice == 'N':
     base_price = float(input("Please enter your base price: "))
     print(symbol, "base_price: ", base_price)
 elif price_choice == 'Y':
     base_price = get_current_price(symbol)
-    print(symbol, "base price: ", base_price,"(current price)")
+    print(symbol, "base price: ", base_price,"(you chose current price)")
+elif not price_choice:
+    price_choice = 'Y'
+    base_price = get_current_price(symbol)
+    print(symbol, "base price: ", base_price,"(you chose current price)")
+
 
 
 price_range = input("Enter the price range (can be a number or percentage, e.g., 10 or 10%): ")
@@ -226,8 +256,12 @@ else:
 num_orders = int(input("Enter the number of orders: "))
 
 
+if side == 'BUY':
+    quantity = float(input("Enter the total trading quantity in "+stable_coin+": "))
 
-quantity = float(input("Enter the total trading quantity in "+stable_coin+": "))
+else:
+    quantity = float(input("Enter the total trading quantity in "+target_coin+": "))
+
 gen_orders = create_orders(symbol, side, base_price, price_range, num_orders, quantity)
 
 print("\nOrder Details:")
