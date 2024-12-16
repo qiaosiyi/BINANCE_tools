@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import json
+import json,datetime
 import logging
 from binance.spot import Spot
 from binance.lib.utils import config_logging
@@ -264,20 +264,38 @@ else:
 
 gen_orders = create_orders(symbol, side, base_price, price_range, num_orders, quantity)
 
+with open('order_log.txt', 'a') as f:
+    f.write(f"\nOrder Details ({datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}):\n")
+    f.write(f"{'No.':<6}{'Symbol':<12}{'Side':<6}{'Price':<12}{'Quantity':<12}{'USD':<10}\n")
+    f.write("-" * 60 + "\n")
+    for i, order in enumerate(gen_orders, 1):
+        f.write(f"{i:<6}{order['symbol']:<12}{order['side']:<6}{order['price']:<12}{order['quantity']:<12}{order['USD']:<10}")
+        f.write("\n")
+    f.write("-" * 60)
+    
 print("\nOrder Details:")
 print(f"{'No.':<6}{'Symbol':<12}{'Side':<6}{'Price':<12}{'Quantity':<12}{'USD':<10}")
 print("-" * 60)
+
 for i, order in enumerate(gen_orders, 1):
     print(f"{i:<6}{order['symbol']:<12}{order['side']:<6}{order['price']:<12}{order['quantity']:<12}{order['USD']:<10}")
 print("-" * 60)
 
 # Ask user whether to execute orders
-user_input = input("Execute orders? (Y/N): ")
+user_input = input("Execute orders? (default Y/N): ")
+with open('order_log.txt', 'a') as f:
 
-if user_input.upper() == 'Y':
-    run_orders(gen_orders)
-    print("Orders executed")
-elif user_input.upper() == 'N':
-    print("Order execution cancelled")
-else:
-    print("Invalid input, order execution cancelled")
+    if user_input.upper() == 'Y':
+        run_orders(gen_orders)
+        print("Orders executed")    
+        f.write("Orders executed\n")
+    elif user_input.upper() == 'N':
+        print("Order execution cancelled")
+        f.write("Order execution cancelled\n")
+    else:
+        run_orders(gen_orders)
+        print("Orders executed")
+        f.write("Orders executed\n")
+
+
+
