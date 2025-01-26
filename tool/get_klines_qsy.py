@@ -161,11 +161,12 @@ def get_klines_qsy(symbol, interval, **params):
             while (time.time() - start_time) < 1:
                 time.sleep(0.1)
             if count == run_time:
+                print(f"已运行{run_time}次,程序结束")
                 break
         # 检查是否达到运行时间限制
-        if time.time() - start_time >= run_time:
-            print(f"已运行{run_time}秒,程序结束")
-            break
+            if time.time() - start_time >= run_time:
+                print(f"已运行{run_time}秒,程序结束")
+                break
         
         except Exception as e:
             print(e)
