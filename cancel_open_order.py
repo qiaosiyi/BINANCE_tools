@@ -16,11 +16,14 @@ api_key = config['api_key']
 api_secret = config['api_secret']
 client = Spot(api_key=api_key, api_secret=api_secret)
 
+# 从命令行获取交易对参数
+import sys
 
-# Get account information
+if len(sys.argv) == 2:
+    symbol = sys.argv[1].upper()
+else:
+    symbol = input("Enter the trading pair symbol (e.g., BTCUSDT): ").upper()
 logging.info(client.account())
-
-symbol = input("Enter the trading pair symbol (e.g., BTCUSDT): ").upper()
 
 # Post a new order
 params = {
