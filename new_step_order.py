@@ -204,7 +204,7 @@ print("-" * 40)
 
 # 让用户选择稳定币
 while True:
-    stable_coin = input(f"\n请选择稳定币 ({'/'.join(stable_coins)}): ").upper()
+    stable_coin = input(f"\n请选择稳定币 ({'/'.join(stable_coins)})default USDT: ").upper()
     if stable_coin in stable_coins or \
        (stable_coin.upper() == 'T' and 'USDT' in stable_coins) or \
        (stable_coin.upper() == 'F' and 'FDUSD' in stable_coins) or \
@@ -215,15 +215,19 @@ while True:
             stable_coin = 'FDUSD'
         elif stable_coin.upper() == 'C':
             stable_coin = 'USDC'
+        else:
+            stable_coin = 'USDT'
         break
-    print("错误: 请选择有效的稳定币")
+    else:
+        stable_coin = 'USDT'
+        break
 
 
 
 symbol=target_coin+stable_coin
 
 
-price_choice = input("Do you want to use current market price as base price? (default Y / N): ").upper()
+price_choice = input("Do you want to use current market price as base price? (default current price / N): ").upper()
 if price_choice == 'N':
     base_price = float(input("Please enter your base price: "))
     print(symbol, "base_price: ", base_price)
@@ -233,11 +237,11 @@ elif price_choice == 'Y':
 elif not price_choice:
     price_choice = 'Y'
     base_price = get_current_price(symbol)
-    print(symbol, "base price: ", base_price,"(you chose current price)")
+    print(symbol, "base price: ", base_price)
 
 
 
-price_range = input("Enter the price range (can be a number or percentage, e.g., 10 or 10%): ")
+price_range = input("Enter the price range (can be a number or percentage, e.g., 10 or 10%): default -10%: ")
 if '%' in price_range:
     price_range = price_range.strip('%')
     if price_range.startswith('-'):
@@ -245,20 +249,29 @@ if '%' in price_range:
     else:
         price_range = float(price_range) / 100
 else:
-    price_range = float(price_range)
-side = input("Enter the trading side (B for BUY, S for SELL): ")
+    price_range = float(-0.1)
+
+
+side = input("Enter the trading side (B for BUY, S for SELL): default BUY: ")
 if side.upper() == 'B':
     side = 'BUY'
 elif side.upper() == 'S':
     side = 'SELL'
 else:
-    raise ValueError("Invalid trading side, please enter B or S")
-num_orders = int(input("Enter the number of orders: "))
+    side = 'BUY'
+num_orders = input("Enter the number of orders: default 30: ")
+if not num_orders:
+    num_orders = 30
+else:
+    num_orders = int(num_orders)
+
 
 
 if side == 'BUY':
-    quantity = float(input("Enter the total trading quantity in "+stable_coin+": "))
-
+    
+    quantity = (input("Enter the total trading quantity in "+stable_coin+": default 500: "))
+    if not quantity:
+        quantity = 500
 else:
     quantity = float(input("Enter the total trading quantity in "+target_coin+": "))
 
