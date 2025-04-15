@@ -269,7 +269,7 @@ else:
 
 if side == 'BUY':
     
-    quantity = (input("Enter the total trading quantity in "+stable_coin+": default 500: "))
+    quantity = int(input("Enter the total trading quantity in "+stable_coin+": default 500: "))
     if not quantity:
         quantity = 500
 else:
